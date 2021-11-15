@@ -7,15 +7,6 @@ import {userModel} from '../model/model';
 const router = express.Router();
 export default router;
 
-// router.post(
-//     '/signup',
-//     passport.authenticate('signup', {session:false }),
-//         async (req, res, next) => {
-//             res.status(200).json({
-//                 message: 'Signup success',
-//                 user: req.user
-//             });
-//         });
 router.post(
     '/auth', 
     async(req, res, next) => {

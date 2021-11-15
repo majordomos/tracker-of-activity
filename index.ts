@@ -16,10 +16,7 @@ const port = 3000;
 app.use(passport.initialize());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use('/', routes);
-app.use('/user', passport.authenticate('jwt', { session: false }), secureRoute);
-app.get('/', (req, res) => {
-    res.send('Hello kek!');
-});
+app.use('/', passport.authenticate('jwt', { session: false }), secureRoute);
 app.listen(port, () => {
         console.log(`Server started at ${port}.`)
     });
