@@ -2,6 +2,7 @@ import express from 'express';
 import moment from 'moment';
 import jwt_decode from 'jwt-decode';
 import {timeModel} from '../model/model';
+import redisClient from '../index';
 
 interface IJWTtoken{
     user: IUser,
@@ -64,20 +65,32 @@ router.get(
         if(token){
             const decodedToken : IJWTtoken = jwt_decode(token);       
             const currentUser = decodedToken.user.username;
-            let allTracks = await timeModel.find({username: currentUser}); 
-            let callTracks = [];
-            if (toDate && fromDate){
-                callTracks = allTracks.filter(track=>{
-                    return moment(track.start_time, 'ddd MMM DD YYYY kk:mm:ss').isAfter(fromDate.toString()) 
-                    && moment(track.end_time, 'ddd MMM DD YYYY kk:mm:ss').isSameOrBefore(moment(toDate.toString()), 'day')
+            const keyValue = `${currentUser}${fromDate}${toDate}`;
+            redisClient.get(
+                keyValue,
+                async (err, sum) => {
+                    if (sum){
+                        return res.status(200).send(`number of hours: ${sum}`);
+                    }
+                    else {
+                        let allTracks = await timeModel.find({username: currentUser}); 
+                        let callTracks = [];
+                        if (toDate && fromDate){
+                            callTracks = allTracks.filter(track=>{
+                                return moment(track.start_time, 'ddd MMM DD YYYY kk:mm:ss').isAfter(fromDate.toString()) 
+                                && moment(track.end_time, 'ddd MMM DD YYYY kk:mm:ss').isSameOrBefore(moment(toDate.toString()), 'day')
+                            }
+                            );
+                        }
+                        let sumOfHours = 0;
+                        for (let currentTrack of callTracks){
+                            sumOfHours += moment.duration(moment(currentTrack.end_time, 'ddd MMM DD YYYY kk:mm:ss').diff(moment(currentTrack.start_time, 'ddd MMM DD YYYY kk:mm:ss'))).asHours()
+                        }
+                        redisClient.set(keyValue, JSON.stringify(sumOfHours));
+                        return res.status(200).send(`number of hours: ${(sumOfHours)}`);
+                    }
                 }
-                );
-            }
-            let sumOfHours = 0;
-            for (let currentTrack of callTracks){
-                sumOfHours += moment.duration(moment(currentTrack.end_time, 'ddd MMM DD YYYY kk:mm:ss').diff(moment(currentTrack.start_time, 'ddd MMM DD YYYY kk:mm:ss'))).asHours()
-            }
-            res.status(200).send(`sum: ${Math.trunc(sumOfHours)}`);
+            );
         }   
     }
 );

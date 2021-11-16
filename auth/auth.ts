@@ -6,25 +6,6 @@ import ExtractJWT from 'passport-jwt';
 
 const localStrategy = passportLocal.Strategy;
 
-// passport.use(
-//     'signup',
-//     new localStrategy(
-//         {
-//             usernameField: 'username',
-//             passwordField: 'password'
-//         },
-//         async (username, password, done) => {
-//             try{
-//                 const user = await userModel.create({username, password});
-//                 return done(null, user);
-//             }
-//             catch(error){
-//                 done(error);
-//             }
-//         }
-//     )
-// );
-
 passport.use(
     'auth',
     new localStrategy(
