@@ -1,18 +1,16 @@
 import express from 'express';
 import passport from 'passport';
 import jwt from 'jsonwebtoken';
-import {userModel} from '../model/model';
-
+import {userModel, IUser} from '../model/model';
 
 const router = express.Router();
-export default router;
 
 router.post(
     '/auth', 
     async(req, res, next) => {
         passport.authenticate(
             'auth',
-            async(err, user, info) => {
+            async(err, user:IUser) => {
                 try{
                     if (err || !user){
                         const error = new Error('An error occurred.');
@@ -35,4 +33,5 @@ router.post(
             })
             (req, res, next);
         }
-        );
+    );
+export default router;

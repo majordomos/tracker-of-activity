@@ -1,7 +1,17 @@
-import mongoose from 'mongoose';
-const Schema = mongoose.Schema;
+import {Schema, model, Document} from 'mongoose';
 
-const userSchema = new Schema({
+export interface IUser extends Document{
+    username: string,
+    password: string
+}
+
+export interface ITrack extends Document{
+    start_time: string,
+    end_time: string,
+    username: string | undefined
+}
+
+const userSchema = new Schema<IUser>({
     username:{
         type: String,
         required: true,
@@ -15,14 +25,14 @@ const userSchema = new Schema({
 });
 userSchema.methods.isValidPassword = async function(password){
     const user = this;
-    let compare = true;
+    let compare: Boolean = true;
     if (password !== user.password){
         compare = false;
     }
     return compare;
 }
 
-const timeSchema = new Schema({
+const trackSchema = new Schema<ITrack>({
     start_time:{
         type: String,
         required: true
@@ -36,5 +46,5 @@ const timeSchema = new Schema({
     }
 });
 
-export const userModel = mongoose.model('user', userSchema);
-export const timeModel = mongoose.model('time', timeSchema);
+export const userModel = model<any, any, IUser>('user', userSchema);
+export const trackModel = model<ITrack>('track', trackSchema);

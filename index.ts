@@ -2,7 +2,7 @@ import express from 'express';
 import mongoose from 'mongoose';
 import passport from 'passport';
 import bodyParser from 'body-parser';
-import {userModel, timeModel} from './model/model';
+import {userModel, trackModel} from './model/model';
 import routes from './routes/routes';
 import secureRoute from './routes/secure-routes';
 import redis, { RedisClient } from 'redis';
