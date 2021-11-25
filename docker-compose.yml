@@ -1,0 +1,25 @@
+version: '3'
+services:
+  tracker-of-activity:
+    container_name: tracker-of-activity
+    image: tracker-of-activity/latest
+    restart: always 
+    build: . 
+    ports: 
+      - "5002:3000"
+    links:
+      - mongo
+      - redis
+  mongo:
+    container_name: mongo
+    image: mongo
+    restart: always
+    volumes:
+    - ./data:/data/db
+    ports:
+    - "27017:27017"
+  redis:
+    container_name: redis
+    image: redis
+    ports:
+    - "6379:6379"

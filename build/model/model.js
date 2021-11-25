@@ -12,10 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.timeModel = exports.userModel = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
-const Schema = mongoose_1.default.Schema;
-const userSchema = new Schema({
+exports.trackModel = exports.userModel = void 0;
+const mongoose_1 = require("mongoose");
+const bcrypt_1 = __importDefault(require("bcrypt"));
+const userSchema = new mongoose_1.Schema({
     username: {
         type: String,
         required: true,
@@ -30,25 +30,33 @@ const userSchema = new Schema({
 userSchema.methods.isValidPassword = function (password) {
     return __awaiter(this, void 0, void 0, function* () {
         const user = this;
-        let compare = true;
-        if (password !== user.password) {
-            compare = false;
-        }
+        const compare = yield bcrypt_1.default.compare(password, user.password);
         return compare;
     });
 };
-const timeSchema = new Schema({
+userSchema.pre('save', function (next) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const user = this;
+        const hash = yield bcrypt_1.default.hash(this.password, 10);
+        this.password = hash;
+        next();
+    });
+});
+const trackSchema = new mongoose_1.Schema({
     start_time: {
-        type: String,
+        type: Date,
         required: true
     },
     end_time: {
-        type: String
+        type: Date
     },
     username: {
         type: String,
         required: true
+    },
+    time_diff: {
+        type: Number
     }
 });
-exports.userModel = mongoose_1.default.model('user', userSchema);
-exports.timeModel = mongoose_1.default.model('time', timeSchema);
+exports.userModel = (0, mongoose_1.model)('user', userSchema);
+exports.trackModel = (0, mongoose_1.model)('track', trackSchema);

@@ -1,4 +1,5 @@
 import {Schema, model, Document} from 'mongoose';
+import bcrypt from 'bcrypt';
 
 export interface IUser extends Document{
     username: string,
@@ -6,9 +7,10 @@ export interface IUser extends Document{
 }
 
 export interface ITrack extends Document{
-    start_time: string,
-    end_time: string,
-    username: string | undefined
+    start_time: Date,
+    end_time: Date,
+    username: string,
+    time_diff: number
 }
 
 const userSchema = new Schema<IUser>({
@@ -25,26 +27,35 @@ const userSchema = new Schema<IUser>({
 });
 userSchema.methods.isValidPassword = async function(password){
     const user = this;
-    let compare: Boolean = true;
-    if (password !== user.password){
-        compare = false;
-    }
+    const compare = await bcrypt.compare(password, user.password);
     return compare;
 }
 
+userSchema.pre(
+    'save',
+    async function(next){
+        const user = this;
+        const hash = await bcrypt.hash(this.password, 10);
+        this.password = hash;
+        next();
+    }
+);
+
 const trackSchema = new Schema<ITrack>({
     start_time:{
-        type: String,
+        type: Date,
         required: true
     },
     end_time:{
-        type: String
+        type: Date
     },
     username:{
         type: String,
         required: true
+    },
+    time_diff: {
+        type: Number
     }
 });
-
 export const userModel = model<any, any, IUser>('user', userSchema);
 export const trackModel = model<ITrack>('track', trackSchema);

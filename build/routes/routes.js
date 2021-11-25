@@ -16,9 +16,13 @@ const express_1 = __importDefault(require("express"));
 const passport_1 = __importDefault(require("passport"));
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const router = express_1.default.Router();
-exports.default = router;
+router.post('/signup', passport_1.default.authenticate('signup', { session: false }), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    res.json({
+        message: 'Signup successful'
+    });
+}));
 router.post('/auth', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    passport_1.default.authenticate('auth', (err, user, info) => __awaiter(void 0, void 0, void 0, function* () {
+    passport_1.default.authenticate('auth', (err, user) => __awaiter(void 0, void 0, void 0, function* () {
         try {
             if (err || !user) {
                 const error = new Error('An error occurred.');
@@ -37,3 +41,4 @@ router.post('/auth', (req, res, next) => __awaiter(void 0, void 0, void 0, funct
         }
     }))(req, res, next);
 }));
+exports.default = router;

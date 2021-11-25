@@ -37,24 +37,18 @@ const passportLocal = __importStar(require("passport-local"));
 const passport_jwt_1 = __importDefault(require("passport-jwt"));
 const passport_jwt_2 = __importDefault(require("passport-jwt"));
 const localStrategy = passportLocal.Strategy;
-// passport.use(
-//     'signup',
-//     new localStrategy(
-//         {
-//             usernameField: 'username',
-//             passwordField: 'password'
-//         },
-//         async (username, password, done) => {
-//             try{
-//                 const user = await userModel.create({username, password});
-//                 return done(null, user);
-//             }
-//             catch(error){
-//                 done(error);
-//             }
-//         }
-//     )
-// );
+passport_1.default.use('signup', new localStrategy({
+    usernameField: 'username',
+    passwordField: 'password'
+}, (username, password, done) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const user = yield model_1.userModel.create({ username, password });
+        return done(null, user);
+    }
+    catch (error) {
+        done(error);
+    }
+})));
 passport_1.default.use('auth', new localStrategy({
     usernameField: 'username',
     passwordField: 'password'
@@ -71,13 +65,12 @@ passport_1.default.use('auth', new localStrategy({
         return done(null, user, { message: 'Logged successfully' });
     }
     catch (error) {
-        console.log(`error: ${error}`);
         return done(error);
     }
 })));
 passport_1.default.use(new passport_jwt_1.default.Strategy({
     secretOrKey: 'TOP_SECRET',
-    jwtFromRequest: passport_jwt_2.default.ExtractJwt.fromBodyField('secret_token')
+    jwtFromRequest: passport_jwt_2.default.ExtractJwt.fromAuthHeaderAsBearerToken()
 }, (token, done) => __awaiter(void 0, void 0, void 0, function* () {
     try {
         return done(null, token.user);

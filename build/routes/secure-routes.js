@@ -14,61 +14,79 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const moment_1 = __importDefault(require("moment"));
-const jwt_decode_1 = __importDefault(require("jwt-decode"));
 const model_1 = require("../model/model");
+const index_1 = __importDefault(require("../index"));
 const router = express_1.default.Router();
-router.post('/start-work', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const token = req.body.secret_token;
-    const decodedToken = (0, jwt_decode_1.default)(token);
-    const currentUser = decodedToken.user.username;
+router.post('/start-work', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let currentUser = '';
+    if (req) {
+        currentUser = req.user.username;
+    }
     const currentTime = (0, moment_1.default)().format("ddd MMM D YYYY kk:mm:ss");
-    const endTime = ' ';
-    const lastTrack = yield model_1.timeModel.findOne({ username: currentUser, end_time: endTime });
+    const endTime = new Date(0);
+    const timeDiff = 0;
+    if (!currentUser) {
+        return res.status(403).send('Unauthorized');
+    }
+    const lastTrack = yield model_1.trackModel.findOne({ end_time: endTime, username: currentUser });
     if (!lastTrack) {
-        const time = yield model_1.timeModel.create({ start_time: currentTime, end_time: endTime, username: currentUser });
+        const newTrack = yield model_1.trackModel.create({ start_time: currentTime, end_time: endTime, username: currentUser, time_diff: timeDiff });
         res.status(200).send(`start moment: ${currentTime} for ${currentUser}`);
     }
-    else {
+    else
         res.status(200).send(`You did not finished last track`);
+}));
+router.post('/end-work', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    let currentUser = '';
+    if (req) {
+        currentUser = req.user.username;
+    }
+    const currentTime = new Date((0, moment_1.default)().format("ddd MMM D YYYY kk:mm:ss"));
+    const endTime = new Date(0);
+    let timeDiff = 0;
+    const workHours = (start_time, end_time) => {
+        return moment_1.default.duration((0, moment_1.default)(end_time, 'ddd MMM DD YYYY kk:mm:ss').diff((0, moment_1.default)(start_time, 'ddd MMM DD YYYY kk:mm:ss'))).asHours();
+    };
+    if (currentUser) {
+        const lastTrack = yield model_1.trackModel.findOne({ end_time: endTime, username: currentUser });
+        if (lastTrack) {
+            timeDiff = workHours(lastTrack.start_time, currentTime);
+            const time = yield model_1.trackModel.updateOne({ end_time: { $eq: endTime }, username: { $eq: currentUser } }, { end_time: currentTime, time_diff: timeDiff });
+            res.status(200).send(`end moment: ${currentTime} for ${currentUser}`);
+        }
+        else
+            res.status(200).send(`You have no unfineshed tracks`);
     }
 }));
-router.post('/end-work', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const token = req.body.secret_token;
-    const decodedToken = (0, jwt_decode_1.default)(token);
-    const currentUser = decodedToken.user.username;
-    const currentTime = (0, moment_1.default)().format("ddd MMM D YYYY kk:mm:ss");
-    const endTime = ' ';
-    const lastTrack = yield model_1.timeModel.findOne({ username: currentUser, end_time: endTime });
-    if (lastTrack) {
-        const time = yield model_1.timeModel.updateOne({ end_time: { $eq: endTime }, username: { $eq: currentUser } }, { end_time: currentTime });
-        res.status(200).send(`end moment: ${currentTime} for ${currentUser}`);
+router.get('/work-time', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a, _b;
+    const fromDate = (_a = (req.query['from-date'])) === null || _a === void 0 ? void 0 : _a.toString();
+    const toDate = (_b = (req.query['to-date'])) === null || _b === void 0 ? void 0 : _b.toString();
+    let currentUser = '';
+    if (req) {
+        currentUser = req.user.username;
     }
-    else {
-        res.status(200).send(`You have no unfineshed tracks`);
-    }
-}));
-router.get('/work-time', (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
-    const fromDate = req.query['from-date'];
-    const toDate = req.query['to-date'];
-    const token = req.body.secret_token;
-    const decodedToken = (0, jwt_decode_1.default)(token);
-    const currentUser = decodedToken.user.username;
-    let allTracks = yield model_1.timeModel.find({ username: currentUser });
-    let callTracks = [];
-    if (toDate && fromDate) {
-        callTracks = allTracks.filter(track => {
-            console.log(`mom: ${(0, moment_1.default)(track.end_time, 'ddd MMM DD YYYY kk:mm:ss')} dad: ${(0, moment_1.default)(toDate.toString()).format('ddd MMM DD YYYY kk:mm:ss')}`);
-            return (0, moment_1.default)(track.start_time, 'ddd MMM DD YYYY kk:mm:ss').isAfter(fromDate.toString())
-                && (0, moment_1.default)(track.end_time, 'ddd MMM DD YYYY kk:mm:ss').isBefore((0, moment_1.default)(toDate.toString()), 'day');
-        });
-    }
-    const sumOfHours = callTracks.reduce((prevTrack, currTrack) => {
-        return moment_1.default.duration((0, moment_1.default)(prevTrack.end_time.toString()).diff((0, moment_1.default)(prevTrack.start_time.toString()))).asHours() +
-            moment_1.default.duration((0, moment_1.default)(currTrack.end_time.toString()).diff((0, moment_1.default)(currTrack.start_time.toString()))).asHours();
-    });
-    console.log(`sum: ${sumOfHours}`);
-    // if (toDate && fromDate)
-    //     console.log(`diff: ${moment.duration(moment(toDate.toString()).diff(moment(fromDate.toString()))).asHours()}`);
-    res.status(200);
+    const keyValue = `${currentUser}${fromDate}${toDate}`;
+    index_1.default.get(keyValue, (err, sum) => __awaiter(void 0, void 0, void 0, function* () {
+        if (sum) {
+            return res.status(200).send(`number of hours: ${Math.floor(parseInt(sum))}`);
+        }
+        let allTracks = [];
+        if (toDate && fromDate) {
+            const toDateFormatted = new Date(new Date(toDate).setHours(23, 59, 59));
+            const fromDateFormatted = new Date(new Date(fromDate).setHours(0, 0, 0));
+            allTracks = yield model_1.trackModel.find({ username: currentUser, start_time: { $gte: fromDateFormatted }, end_time: { $lte: toDateFormatted } }).lean();
+        }
+        let sumOfHours = 0;
+        let counter = allTracks.length;
+        while (counter--) {
+            if (allTracks)
+                sumOfHours += allTracks[counter].time_diff;
+            else
+                break;
+        }
+        index_1.default.set(keyValue, JSON.stringify(sumOfHours));
+        return res.status(200).send(`number of hours: ${Math.floor(sumOfHours)}`);
+    }));
 }));
 exports.default = router;

@@ -8,11 +8,15 @@ import secureRoute from './routes/secure-routes';
 import redis, { RedisClient } from 'redis';
 
 require('./auth/auth');
-mongoose.connect('mongodb://127.0.0.1:27017/tracker-of-activity');
+mongoose.connect('mongodb://127.0.0.1/tracker-of-activity');
 mongoose.connection.on('error', error => console.log(error));
 mongoose.Promise = global.Promise;
 
-const redisClient = redis.createClient(6379);
+
+const redisClient = redis.createClient({
+    host: '127.0.0.1',
+    port: 6379
+    });
 redisClient.on('error', (error) => {
     console.error(error);
 });

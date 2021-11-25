@@ -4,6 +4,15 @@ import jwt from 'jsonwebtoken';
 import {userModel, IUser} from '../model/model';
 
 const router = express.Router();
+router.post(
+    '/signup',
+    passport.authenticate('signup', { session: false }),
+    async (req, res) => {
+        res.json({
+        message: 'Signup successful'
+        });
+    }
+);
 
 router.post(
     '/auth', 

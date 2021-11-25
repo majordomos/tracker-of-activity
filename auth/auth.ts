@@ -5,6 +5,23 @@ import JWTstrategy from 'passport-jwt';
 import ExtractJWT from 'passport-jwt';
 
 const localStrategy = passportLocal.Strategy;
+passport.use(
+    'signup',
+    new localStrategy(
+    {
+        usernameField: 'username',
+        passwordField: 'password'
+    },
+    async (username, password, done) => {
+        try {
+            const user = await userModel.create({ username, password });
+            return done(null, user);
+        } 
+        catch (error) {
+            done(error);
+        }
+    })
+);
 
 passport.use(
     'auth',
@@ -26,7 +43,6 @@ passport.use(
                 return done(null, user, {message: 'Logged successfully'});
             }
             catch(error) {
-                console.log(`error: ${error}`);
                 return done(error);
             }
         }
